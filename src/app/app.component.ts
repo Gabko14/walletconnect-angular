@@ -1,12 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
-import { createWeb3Modal } from '@web3modal/wagmi';
-import type { Web3Modal } from '@web3modal/wagmi';
+import { type Web3Modal, createWeb3Modal } from '@web3modal/wagmi';
 
-import { reconnect, http, createConfig, disconnect, getAccount } from '@wagmi/core';
+import { reconnect, http, createConfig, disconnect, getAccount, readContract } from '@wagmi/core';
 import { mainnet, sepolia } from '@wagmi/core/chains';
 import { coinbaseWallet, walletConnect, injected } from '@wagmi/connectors';
+
+import { ContractFunctionExecutionError, ContractFunctionZeroDataError, erc20Abi } from 'viem';
+import { type Address } from 'abitype';
 
 import { environment } from '../environments/environment';
 
@@ -18,7 +21,7 @@ import { environment } from '../environments/environment';
 @Component({
 	selector: 'app-root',
 	standalone: true,
-	imports: [RouterOutlet],
+	imports: [RouterOutlet, FormsModule],
 	templateUrl: './app.component.html',
 	styleUrl: './app.component.sass'
 })
@@ -67,5 +70,21 @@ export class AppComponent implements OnInit {
 
 	openWalletConnectModal() {
 		getAccount(this.config).isConnected ? disconnect(this.config) : this.modal.open();
+	}
+
+	addressUSDT: Address = '0x6b175474e89094c44da98b954eedeac495271d0f';
+	contractData?: string;
+	async displayContractData() {
+		try {
+			this.contractData = (await readContract(this.config, {
+				abi: erc20Abi,
+				address: this.addressUSDT,
+				functionName: 'symbol'
+			})) as string;
+		} catch (e) {
+			if (e instanceof ContractFunctionExecutionError && e.cause instanceof ContractFunctionZeroDataError)
+				this.contractData = 'NO DATA (0x)';
+			else console.error(e);
+		}
 	}
 }

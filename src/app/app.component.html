@@ -1,5 +1,13 @@
 <main class="main">
 	<button (click)="openWalletConnectModal()">Connect Wallet</button>
+	<div>
+		<button (click)="displayContractData()">Read USDT Contract Info</button>
+		<label>
+			USDT Address:
+			<input type="text" [(ngModel)]="addressUSDT" style="width: 20rem" />
+		</label>
+		<p>Contract Data: "{{ contractData }}"</p>
+	</div>
 </main>
 
 <router-outlet />
