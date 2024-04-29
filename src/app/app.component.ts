@@ -4,14 +4,18 @@ import { FormsModule } from '@angular/forms';
 
 import { type Web3Modal, createWeb3Modal } from '@web3modal/wagmi';
 
-import { reconnect, http, createConfig, disconnect, getAccount, readContract } from '@wagmi/core';
+import { reconnect, http, createConfig, disconnect, getAccount, readContract, getClient } from '@wagmi/core';
 import { mainnet, sepolia } from '@wagmi/core/chains';
 import { coinbaseWallet, walletConnect, injected } from '@wagmi/connectors';
 
 import { ContractFunctionExecutionError, ContractFunctionZeroDataError, erc20Abi } from 'viem';
+import type { Chain, Client, Transport } from 'viem';
 import { type Address } from 'abitype';
 
 import { environment } from '../environments/environment';
+
+import { Web3Eth } from 'web3-eth';
+import { inspect } from 'util';
 
 // https://docs.walletconnect.com/web3modal/javascript/about?platform=wagmi
 // /\ Implementation - Wagmi - Custom: https://github.com/WalletConnect/walletconnect-docs/blob/13c71646d2e3c0557b6aee541cd16079acd2f426/docs/web3modal/javascript/wagmi/about/triggermodal.mdx?plain=1#L51
@@ -66,6 +70,10 @@ export class AppComponent implements OnInit {
 			enableAnalytics: true, // Optional - defaults to Cloud configuration
 			enableOnramp: true // Optional - false as default
 		});
+
+		this.modal.subscribeState(state => {
+			if (!state.open && getAccount(this.config).isConnected) this.convertToWeb3js();
+		});
 	}
 
 	openWalletConnectModal() {
@@ -85,6 +93,27 @@ export class AppComponent implements OnInit {
 			if (e instanceof ContractFunctionExecutionError && e.cause instanceof ContractFunctionZeroDataError)
 				this.contractData = 'NO DATA (0x)';
 			else console.error(e);
+		}
+	}
+
+	async convertToWeb3js() {
+		try {
+			if (!getAccount(this.config).isConnected) return console.log('not connected');
+			const client = getClient(this.config, { chainId: mainnet.id });
+			const eth = new Web3Eth(client.chain.name == 'Ethereum' ? window.ethereum : client.transport);
+			const accounts = await eth.getAccounts();
+			const account = accounts[0] ? accounts[0].replace(/^0x/, '') : null;
+
+			console.log('transactionCount', eth.getTransactionCount(accounts[0]));
+			console.log('balance', eth.getBalance(accounts[0]));
+			console.log('last block info', eth.getBlock(await eth.getBlockNumber()));
+			console.log('node info', eth.getNodeInfo());
+			console.log('walletconnect info', this.modal.getWalletInfo());
+			console.log('client', inspect(client));
+			console.log('accounts', inspect(accounts));
+			console.log('account', account);
+		} catch (e) {
+			console.error(e);
 		}
 	}
 }
