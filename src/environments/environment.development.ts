@@ -1,3 +1,3 @@
-export const environment: Record<string, string> = {
-	PROJECT_ID: ''
+export const environment = {
+    PROJECT_ID: '',
 };

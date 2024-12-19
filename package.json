@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "node -r dotenv/config fillEnv.js && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:walletconnect-angular": "node dist/walletconnect-angular/server/server.mjs"
@@ -24,6 +24,7 @@
     "@wagmi/connectors": "^4.2.0",
     "@wagmi/core": "^2.7.0",
     "@web3modal/wagmi": "^4.1.11",
+    "dotenv": "^16.4.7",
     "express": "^4.18.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
